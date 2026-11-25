@@ -47,7 +47,7 @@
       text-overflow: ellipsis;
     }
 
-    /* Lista de mensajes */
+    /* Lista de mensajes (de abajo hacia arriba como WhatsApp) */
     #messages {
       list-style: none;
       margin: 0;
@@ -58,6 +58,9 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+    #messages > :first-child {
+      margin-top: auto;
     }
     #messages li {
       background: #2a2a2a;
@@ -164,8 +167,8 @@
     <ul id="messages"></ul>
 
     <form id="chat-form" class="chat-form">
-      <input id="text-input" type="text" placeholder="Escribí un mensaje..." autocomplete="off" required />
-      <button type="submit">Enviar</button>
+      <input id="text-input" type="text" placeholder="Escribí un mensaje..." autocomplete="off" enterkeyhint="send" />
+      <button id="send-btn" type="submit">Enviar</button>
     </form>
   </div>
 
@@ -181,6 +184,12 @@
     const messagesList = document.getElementById("messages");
     const chatForm = document.getElementById("chat-form");
     const textInput = document.getElementById("text-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    // Evita que tocar el botón "Enviar" le saque el foco al input y cierre el teclado en el celular
+    sendBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+    });
 
     // 2. Cuando el usuario envía su nombre en la ventana emergente
     joinForm.addEventListener("submit", (e) => {
@@ -201,11 +210,15 @@
     chatForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = textInput.value.trim();
-      if (!text) return;
+      if (!text) {
+        textInput.focus();
+        return;
+      }
 
       // Envía el mensaje "chat" al servidor
       ws.send(JSON.stringify({ type: "chat", text }));
       textInput.value = "";
+      textInput.focus(); // Mantiene el teclado abierto
     });
 
     // 4. Cuando llega un mensaje desde el servidor
