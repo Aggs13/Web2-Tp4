@@ -140,8 +140,9 @@
   </div>
 
   <script>
-    // 1. Conecta por WebSocket al mismo host y puerto donde se sirvió la página
-    const ws = new WebSocket(`ws://${location.host}`);
+    // 1. Conecta por WebSocket al mismo host (usa wss:// en HTTPS como Render y ws:// en localhost)
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${protocol}//${location.host}`);
 
     const nameModal = document.getElementById("name-modal");
     const joinForm = document.getElementById("join-form");
