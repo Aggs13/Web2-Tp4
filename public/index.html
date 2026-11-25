@@ -1,11 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TP4 - Mini Chat WebSocket</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+    body {
+      margin: 0;
+      background: #121212;
+      color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Contenedor principal del chat */
+    .chat-box {
+      width: 100%;
+      max-width: 480px;
+      height: 550px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 14px 16px;
+      background: #272727;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chat-header h2 { margin: 0; font-size: 1rem; }
+    .user-badge {
+      font-size: 0.85rem;
+      color: #4ade80;
+    }
+
+    /* Lista de mensajes */
+    #messages {
+      list-style: none;
+      margin: 0;
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #messages li {
+      background: #2a2a2a;
+      padding: 8px 12px;
+      border-radius: 6px;
+      word-break: break-word;
+    }
+    #messages li strong { color: #60a5fa; }
+    #messages li.error { color: #f87171; background: #3b1d1d; }
+
+    /* Formulario para enviar mensaje */
+    .chat-form {
+      display: flex;
+      padding: 12px;
+      gap: 8px;
+      background: #272727;
+      border-top: 1px solid #333;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #121212;
+      color: #fff;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4ed8; }
+
+    /* Ventana emergente (Modal) para pedir el nombre */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: #1e1e1e;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 20px;
+      width: 90%;
+      max-width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .modal h3 { margin: 0; }
+  </style>
 </head>
 <body>
-  <h1>Hola</h1>
+
+  <!-- Ventana emergente para elegir nombre -->
+  <div id="name-modal" class="modal-overlay">
+    <form id="join-form" class="modal">
+      <h3>Ingresá tu nombre</h3>
+      <input id="name-input" type="text" required autofocus />
+      <button type="submit">Entrar al chat</button>
+    </form>
+  </div>
+
+  <!-- Caja de chat -->
+  <div class="chat-box">
+    <div class="chat-header">
+      <h2>Chat WebSocket</h2>
+      <span id="current-user" class="user-badge">Sin nombre</span>
+    </div>
+
+    <ul id="messages"></ul>
+
+    <form id="chat-form" class="chat-form">
+      <input id="text-input" type="text" placeholder="Escribí un mensaje..." autocomplete="off" required />
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <script>
+    // 1. Conecta por WebSocket al mismo host y puerto donde se sirvió la página
+    const ws = new WebSocket(`ws://${location.host}`);
+
+    const nameModal = document.getElementById("name-modal");
+    const joinForm = document.getElementById("join-form");
+    const nameInput = document.getElementById("name-input");
+    const currentUser = document.getElementById("current-user");
+    const messagesList = document.getElementById("messages");
+    const chatForm = document.getElementById("chat-form");
+    const textInput = document.getElementById("text-input");
+
+    // 2. Cuando el usuario envía su nombre en la ventana emergente
+    joinForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      if (!name) return;
+
+      // Envía el mensaje "join" al servidor
+      ws.send(JSON.stringify({ type: "join", name }));
+
+      // Cierra la ventana emergente y muestra el nombre arriba
+      currentUser.textContent = `Conectado como: ${name}`;
+      nameModal.classList.add("hidden");
+      textInput.focus();
+    });
+
+    // 3. Cuando el usuario envía un mensaje de chat
+    chatForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = textInput.value.trim();
+      if (!text) return;
+
+      // Envía el mensaje "chat" al servidor
+      ws.send(JSON.stringify({ type: "chat", text }));
+      textInput.value = "";
+    });
+
+    // 4. Cuando llega un mensaje desde el servidor
+    ws.addEventListener("message", (event) => {
+      const msg = JSON.parse(event.data);
+      const li = document.createElement("li");
+
+      if (msg.type === "chat") {
+        const strong = document.createElement("strong");
+        strong.textContent = `${msg.name}: `;
+        li.appendChild(strong);
+        li.appendChild(document.createTextNode(msg.text));
+      } else if (msg.type === "error") {
+        li.className = "error";
+        li.textContent = `Error: ${msg.message}`;
+      }
+
+      messagesList.appendChild(li);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    });
+  </script>
 </body>
 </html>
