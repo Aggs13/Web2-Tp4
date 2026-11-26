@@ -10,14 +10,66 @@ body {
   min-height: 100dvh;
 }
 
-/* Layout: chat a la izquierda + conectados a la derecha */
+/* Layout: productos a la izq + chat al centro + conectados a la derecha */
 .app-layout {
   width: 100%;
-  max-width: 720px;
+  max-width: 1020px;
   height: 550px;
   display: flex;
   gap: 12px;
   padding: 0 12px;
+}
+
+/* Panel izquierdo de productos propuestos */
+.products-panel {
+  width: 260px;
+  background: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#products-list {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.product-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+.product-card img {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #121212;
+  flex-shrink: 0;
+}
+.product-info {
+  min-width: 0;
+  flex: 1;
+}
+.product-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-meta {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 2px;
 }
 
 /* Contenedor principal del chat */
@@ -196,11 +248,20 @@ button:active { transform: scale(0.98); }
     border: none;
     border-radius: 0;
   }
-  .users-panel {
+  .users-panel, .products-panel {
     width: 100%;
     border: none;
     border-bottom: 1px solid #333;
     border-radius: 0;
+  }
+  #products-list {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 6px 12px;
+  }
+  .product-card {
+    min-width: 190px;
   }
   .users-header {
     padding: 8px 14px;

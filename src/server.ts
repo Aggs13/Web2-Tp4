@@ -2,6 +2,9 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
+import { GetProduct } from "./catalog.services.js";
+import { ProponerProducto } from "./list.services.js";
+import { getProductsSorted } from "./list.repository.js";
 
 const port = Number(process.env.PORT ?? 3000);
 
@@ -34,7 +37,7 @@ const users = new Map<WebSocket, string>();
 wss.on("connection", (ws) => {
   console.log("Nuevo cliente conectado");
 
-  ws.on("message", (raw) => {
+  ws.on("message", async (raw) => {
     try {
       const msg = JSON.parse(raw.toString());
 
@@ -58,6 +61,7 @@ wss.on("connection", (ws) => {
         ws.send(JSON.stringify({ type: "joined", name: name }));
 
         broadcastParticipantes()
+        broadcastProductos()
         return;
       }
 
@@ -80,6 +84,22 @@ wss.on("connection", (ws) => {
         return;
       }
 
+      // Caso 3: el usuario busca un producto por ID en el catálogo
+      if (msg.type === "get_product" && typeof msg.id === "number" && Number.isInteger(msg.id) && msg.id > 0) {
+        
+        const name = users.get(ws) 
+
+        if (!name) {
+          ws.send(JSON.stringify({ type: "error", message: "No tenes nombre de usuarui" }));
+          return;
+        }
+        
+        const result = await ProponerProducto(msg.id,name);
+        ws.send(JSON.stringify({ type: "product_result", result }));
+        broadcastProductos();
+        return;
+      }
+
       ws.send(JSON.stringify({ type: "error", message: "Mensaje inválido" }));
     } catch {
       ws.send(JSON.stringify({ type: "error", message: "El mensaje debe ser JSON válido" }));
@@ -97,6 +117,7 @@ server.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
 });
 
+
 function broadcastParticipantes() {
   const payload = JSON.stringify({
     type: "participantes",
@@ -104,6 +125,20 @@ function broadcastParticipantes() {
   });
 
   for (const client of wss.clients) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  }
+}
+
+
+function broadcastProductos(){
+  const payload = JSON.stringify({
+    type: "productos",
+    products: getProductsSorted()
+  })
+
+  for(const client of wss.clients){
     if (client.readyState === WebSocket.OPEN) {
       client.send(payload);
     }

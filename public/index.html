@@ -18,14 +18,25 @@
     </form>
   </div>
 
-  <!-- Contenedor principal: Chat + Lista de conectados -->
+  <!-- Contenedor principal: Productos a la izq + Chat al centro + Conectados a la der -->
   <div class="app-layout">
+    <!-- Lista de productos propuestos a la izquierda -->
+    <aside class="products-panel">
+      <div class="users-header">Productos (<span id="products-count">0</span>)</div>
+      <ul id="products-list"></ul>
+    </aside>
+
     <!-- Caja de chat -->
     <div class="chat-box">
       <div class="chat-header">
         <h2>Chat WebSocket</h2>
         <span id="current-user" class="user-badge">Sin nombre</span>
       </div>
+
+      <form id="product-form" class="chat-form">
+        <input id="product-id-input" type="number" min="1" placeholder="ID de producto (ej: 3)" required />
+        <button type="submit">Buscar</button>
+      </form>
 
       <ul id="messages"></ul>
 
@@ -58,6 +69,10 @@
     const sendBtn = document.getElementById("send-btn");
     const usersList = document.getElementById("users-list");
     const usersCount = document.getElementById("users-count");
+    const productsList = document.getElementById("products-list");
+    const productsCount = document.getElementById("products-count");
+    const productForm = document.getElementById("product-form");
+    const productIdInput = document.getElementById("product-id-input");
 
     // Evita que tocar el botón "Enviar" le saque el foco al input y cierre el teclado en el celular
     sendBtn.addEventListener("pointerdown", (e) => {
@@ -90,6 +105,14 @@
       textInput.focus(); // Mantiene el teclado abierto
     });
 
+    // Buscar producto por ID (solo imprime el resultado en consola por ahora)
+    productForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const id = Number(productIdInput.value);
+      ws.send(JSON.stringify({ type: "get_product", id }));
+      productIdInput.value = "";
+    });
+
     // 4. Cuando llega un mensaje desde el servidor
     ws.addEventListener("message", (event) => {
       const msg = JSON.parse(event.data);
@@ -105,6 +128,44 @@
       if (msg.type === "error" && !nameModal.classList.contains("hidden")) {
         joinError.textContent = msg.message;
         nameInput.focus();
+        return;
+      }
+
+      if (msg.type === "product_result") {
+        console.log("Producto recibido:", msg.result);
+        return;
+      }
+
+      if (msg.type === "productos") {
+        console.log("Lista de productos:", msg.products);
+        productsCount.textContent = msg.products.length;
+        productsList.innerHTML = "";
+
+        for (const p of msg.products) {
+          const item = document.createElement("li");
+          item.className = "product-card";
+
+          const img = document.createElement("img");
+          img.src = p.thumbnail;
+          img.alt = p.title;
+
+          const info = document.createElement("div");
+          info.className = "product-info";
+
+          const title = document.createElement("div");
+          title.className = "product-title";
+          title.textContent = `#${p.id} ${p.title}`;
+
+          const meta = document.createElement("div");
+          meta.className = "product-meta";
+          meta.textContent = `$${p.price} · por ${p.proposedBy} · ★ ${p.votes}`;
+
+          info.appendChild(title);
+          info.appendChild(meta);
+          item.appendChild(img);
+          item.appendChild(info);
+          productsList.appendChild(item);
+        }
         return;
       }
 
