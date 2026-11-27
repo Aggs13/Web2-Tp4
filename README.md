@@ -136,3 +136,28 @@ Todos los mensajes intercambiados son objetos **JSON** con la propiedad discrimi
 Si la pantalla usara *polling* (por ejemplo, un `setInterval` haciendo `fetch("/api/ranking")` cada 2 o 5 segundos):
 1. **Mayor latencia (sin tiempo real verdadero):** Los votos o cambios en los participantes no se verían al instante, sino con una demora de hasta el intervalo configurado.
 2. **Tráfico y carga innecesaria en el servidor:** Si nadie vota ni entra durante 10 minutos, la pantalla seguiría enviando cientos de peticiones HTTP redundantes con sus respectivos headers, consumiendo recursos en vano. Con SSE, el servidor envía bytes **únicamente cuando ocurre un cambio real** en el estado.
+
+---
+
+## 6. Evidencia y Demostración
+
+Los videos de prueba se encuentran incluidos en la carpeta [`./evidencia/`](./evidencia/):
+
+### 1. Sincronización en tiempo real: 3 participantes (WebSocket) + Pantalla de Ranking (SSE)
+- **Archivo:** [`evidencia/demo-sincronizacion.mp4`](./evidencia/demo-sincronizacion.mp4)
+- **Qué demuestra:**
+  - Ingreso de 3 participantes (`Agus`, `Jose`, `Anaa`) y actualización en vivo de la lista de conectados.
+  - Propuesta simultánea de múltiples productos (`1, 4, 6`, `78`, `123, 7`) consultando DummyJSON.
+  - Votación, retiro de votos y reordenamiento automático del ranking tanto en los participantes como en la pantalla SSE (`/pantalla`).
+  - Validación de permisos al quitar un producto: rechazo con error cuando otro participante intenta eliminar un producto ajeno (`"Solo quien lo propuso puede quitarlo"`) y eliminación exitosa por parte de quien lo propuso.
+
+<video src="./evidencia/demo-sincronizacion.mp4" controls width="100%"></video>
+
+### 2. Propuesta múltiple con fallos parciales (producto repetido + producto inexistente)
+- **Archivo:** [`evidencia/demo-pruebas.mp4`](./evidencia/demo-pruebas.mp4)
+- **Qué demuestra:**
+  - Propuesta conjunta de `1, 2, 99999`.
+  - El producto válido (`#2 Eyeshadow Palette with Mirror`) se agrega a la lista compartida y a la pantalla SSE para todos los usuarios.
+  - Únicamente quien realizó la propuesta recibe el detalle de cada fallo individual (`Producto 1: El producto ya esta en la lista` y `Producto 99999: Producto inexistente`), sin afectar ni mostrar errores a los demás participantes.
+
+<video src="./evidencia/demo-pruebas.mp4" controls width="100%"></video>
