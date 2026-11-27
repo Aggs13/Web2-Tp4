@@ -34,8 +34,8 @@
       </div>
 
       <form id="product-form" class="chat-form">
-        <input id="product-id-input" type="number" min="1" placeholder="ID de producto (ej: 3)" required />
-        <button type="submit">Buscar</button>
+        <input id="product-id-input" type="text" placeholder="IDs de productos (ej: 1, 2, 9999)" autocomplete="off" required />
+        <button type="submit">Proponer</button>
       </form>
 
       <ul id="messages"></ul>
@@ -106,11 +106,23 @@
       textInput.focus(); // Mantiene el teclado abierto
     });
 
-    // Buscar producto por ID (solo imprime el resultado en consola por ahora)
+    // Proponer uno o varios productos por ID separados por coma
     productForm.addEventListener("submit", (e) => {
       e.preventDefault();
-      const id = Number(productIdInput.value);
-      ws.send(JSON.stringify({ type: "get_product", id }));
+      const rawParts = productIdInput.value.split(",").map((s) => s.trim()).filter(Boolean);
+      const ids = rawParts.map((s) => Number(s));
+
+      // Si algún valor no es entero positivo, el servidor igual lo valida, pero acá permitimos enviarlo o filtrarlo
+      if (ids.some((n) => !Number.isInteger(n) || n <= 0)) {
+        const li = document.createElement("li");
+        li.className = "error";
+        li.textContent = "Error: Ingresá solo números enteros positivos separados por coma (ej: 1, 2, 5)";
+        messagesList.appendChild(li);
+        messagesList.scrollTop = messagesList.scrollHeight;
+        return;
+      }
+
+      ws.send(JSON.stringify({ type: "get_product", ids }));
       productIdInput.value = "";
     });
 
@@ -133,7 +145,14 @@
       }
 
       if (msg.type === "product_result") {
-        console.log("Producto recibido:", msg.result);
+        console.log("Resultado de propuesta:", msg.result);
+        for (const f of msg.result.failed ?? []) {
+          const li = document.createElement("li");
+          li.className = "error";
+          li.textContent = `Producto ${f.id ?? "?"}: ${f.message}`;
+          messagesList.appendChild(li);
+        }
+        messagesList.scrollTop = messagesList.scrollHeight;
         return;
       }
 

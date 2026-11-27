@@ -13,7 +13,7 @@ export async function GetProduct(id:number) {
   try {
     const res = await fetch(url,{signal: AbortSignal.timeout(config.catalogTimeoutMs)})
 
-    if(res.status == 400) return {message: "Producto inexistente"}
+    if(res.status == 404) return {id,message: "Producto inexistente"}
     if(!res.ok) return {message: `Error HTTP ${res.status}`}
 
     const data = await res.json()

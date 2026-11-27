@@ -84,17 +84,24 @@ wss.on("connection", (ws) => {
         return;
       }
 
-      // Caso 3: el usuario busca un producto por ID en el catálogo
-      if (msg.type === "get_product" && typeof msg.id === "number" && Number.isInteger(msg.id) && msg.id > 0) {
-        
-        const name = users.get(ws) 
-
+      // Caso 3: el usuario propone uno o varios productos por ID
+      if (
+        msg.type === "get_product" &&
+        Array.isArray(msg.ids) &&
+        msg.ids.every((id: unknown) => typeof id === "number" && Number.isInteger(id) && id > 0)
+      ) {
+        const name = users.get(ws);
         if (!name) {
-          ws.send(JSON.stringify({ type: "error", message: "No tenes nombre de usuarui" }));
+          ws.send(JSON.stringify({ type: "error", message: "No tenes nombre de usuario" }));
           return;
         }
-        
-        const result = await ProponerProducto(msg.id,name);
+
+        const result = await ProponerProducto(msg.ids, name);
+        if (result.message) {
+          ws.send(JSON.stringify({ type: "error", message: result.message }));
+          return;
+        }
+
         ws.send(JSON.stringify({ type: "product_result", result }));
         broadcastProductos();
         return;

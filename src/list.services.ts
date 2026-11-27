@@ -1,32 +1,52 @@
 import { GetSimultaneo } from "./catalog.services.js";
-import { addProduct,ExistProduct,getProduct,getProductsSorted,deleteProduct } from "./list.repository.js";
+import { addProduct,ExistProduct,getProduct,getProductsSorted,deleteProduct, type Product } from "./list.repository.js";
 import { GetProduct } from "./catalog.services.js";
-import type { Product } from "./list.repository.js";
 
-export async function ProponerProducto(id:number,nombreUsuario:string) {
+export async function ProponerProducto(ids:number[],nombreUsuario:string) {
 
-  if(ExistProduct(id)) return {message:"EL producto ya esta propuesto"}
-  
-  const misProductos = getProductsSorted().filter((p) => p.proposedBy === nombreUsuario).length;
-  if (misProductos >= 3) return { message: "Solo podés proponer hasta 3 productos como máximo" };
-  
-  const res = await GetProduct(id);
-  if (!res.producto) return { message: res.message };
-    
+  const idsUnicas = [...new Set(ids)]
+  if(idsUnicas.length == 0 || idsUnicas.length > 10) return {message:"Minimo un id, Maximo 10"} 
 
-  const p = res.producto
+  const failed: { id: number | undefined; message: string }[] = [];
+  const idsParaBuscar: number[] = [];
+ 
 
-  const producto : Product = {
-    id: p.id,
-    title: p.title,
-    price: p.price,
-    thumbnail: p.thumbnail,
-    proposedBy: nombreUsuario,
-    votes: 0,
+  for (const id of idsUnicas) {
+    if (ExistProduct(id)) {
+      failed.push({ id, message: "El producto ya esta en la lista" });
+    } else {
+      idsParaBuscar.push(id);
+    }
   }
   
-  addProduct(producto);
-  return { producto };
+  const res = await GetSimultaneo(idsParaBuscar);
+  
+  for (const r of res) {
+    
+    const p = r.producto
+
+    if(p == null) {
+      failed.push({ id: r.id, message: r.message });
+      continue;
+    } 
+
+    const producto : Product = {
+      id: p.id,
+      title: p.title,
+      price: p.price,
+      thumbnail: p.thumbnail,
+      proposedBy: nombreUsuario,
+      votes: 0,
+    }
+    
+    addProduct(producto);
+    
+  }
+  
+  
+  
+
+  return { idsParaBuscar, failed };
 
 }
 
