@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WebSocketServer, WebSocket } from "ws";
 import { GetProduct } from "./catalog.services.js";
-import { ProponerProducto } from "./list.services.js";
+import { ProponerProducto, QuitarProducto, QuitarVoto, VotarProducto } from "./list.services.js";
 import { getProductsSorted } from "./list.repository.js";
 
 const port = Number(process.env.PORT ?? 3000);
@@ -99,6 +99,47 @@ wss.on("connection", (ws) => {
         broadcastProductos();
         return;
       }
+
+      // Caso 4 sumar voto
+      if(msg.type === "vote"){
+        const result = VotarProducto(msg.id)
+        if (result.message) {
+          ws.send(JSON.stringify({ type: "error", message: result.message }));
+          return;
+        }
+        broadcastProductos();
+        return;
+      }
+
+
+      // Caso 5: sacar voto
+      if (msg.type === "unvote") {
+        const result = QuitarVoto(msg.id);
+        if (result.message) {
+          ws.send(JSON.stringify({ type: "error", message: result.message }));
+          return;
+        }
+        broadcastProductos();
+        return;
+      }
+
+      // Caso 6: quitar producto de la lista
+      if (msg.type === "remove" && typeof msg.id === "number") {
+        const name = users.get(ws);
+        if (!name) {
+          ws.send(JSON.stringify({ type: "error", message: "Primero tenés que elegir un nombre" }));
+          return;
+        }
+
+        const result = QuitarProducto(msg.id, name);
+        if (result.message) {
+          ws.send(JSON.stringify({ type: "error", message: result.message }));
+          return;
+        }
+        broadcastProductos();
+        return;
+      }
+
 
       ws.send(JSON.stringify({ type: "error", message: "Mensaje inválido" }));
     } catch {

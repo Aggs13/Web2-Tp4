@@ -71,6 +71,29 @@ body {
   color: #9ca3af;
   margin-top: 2px;
 }
+.product-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: 5px;
+}
+.btn-vote {
+  background: #2563eb;
+}
+.btn-unvote {
+  background: #4b5563;
+}
+.btn-remove {
+  background: #dc2626;
+  padding: 4px 7px;
+}
+.btn-remove:hover {
+  background: #b91c1c;
+}
 
 /* Contenedor principal del chat */
 .chat-box {

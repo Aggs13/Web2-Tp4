@@ -73,6 +73,7 @@
     const productsCount = document.getElementById("products-count");
     const productForm = document.getElementById("product-form");
     const productIdInput = document.getElementById("product-id-input");
+    const votedIds = new Set();
 
     // Evita que tocar el botón "Enviar" le saque el foco al input y cierre el teclado en el celular
     sendBtn.addEventListener("pointerdown", (e) => {
@@ -160,8 +161,39 @@
           meta.className = "product-meta";
           meta.textContent = `$${p.price} · por ${p.proposedBy} · ★ ${p.votes}`;
 
+          const actions = document.createElement("div");
+          actions.className = "product-actions";
+
+          const hasVoted = votedIds.has(p.id);
+          const voteBtn = document.createElement("button");
+          voteBtn.type = "button";
+          voteBtn.className = hasVoted ? "btn-sm btn-unvote" : "btn-sm btn-vote";
+          voteBtn.textContent = hasVoted ? "Sacar voto" : "★ Votar";
+          voteBtn.addEventListener("click", () => {
+            if (votedIds.has(p.id)) {
+              votedIds.delete(p.id);
+              ws.send(JSON.stringify({ type: "unvote", id: p.id }));
+            } else {
+              votedIds.add(p.id);
+              ws.send(JSON.stringify({ type: "vote", id: p.id }));
+            }
+          });
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "btn-sm btn-remove";
+          removeBtn.textContent = "✕";
+          removeBtn.title = "Quitar producto";
+          removeBtn.addEventListener("click", () => {
+            ws.send(JSON.stringify({ type: "remove", id: p.id }));
+          });
+
+          actions.appendChild(voteBtn);
+          actions.appendChild(removeBtn);
+
           info.appendChild(title);
           info.appendChild(meta);
+          info.appendChild(actions);
           item.appendChild(img);
           item.appendChild(info);
           productsList.appendChild(item);
