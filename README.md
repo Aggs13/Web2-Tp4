@@ -2,6 +2,13 @@
 
 Aplicación de lista compartida en tiempo real para elegir un regalo grupal, construida con **Node.js (LTS)** y **TypeScript** en un único servidor y puerto. Integra el catálogo externo de **DummyJSON** de manera asíncrona y paralela, sincronizando participantes por **WebSocket** y una pantalla compartida por **Server-Sent Events (SSE)**.
 
+## 🚀 Demo en Vivo (Render)
+
+Podés probar la aplicación desplegada directamente desde el navegador (o desde varios dispositivos a la vez):
+
+- **Participantes (WebSocket + Chat + Propuestas y Votos):** [https://web2-tp4.onrender.com](https://web2-tp4.onrender.com)
+- **Pantalla Compartida de Ranking (SSE):** [https://web2-tp4.onrender.com/pantalla](https://web2-tp4.onrender.com/pantalla)
+
 ---
 
 ## 1. Instalación y ejecución
