@@ -30,7 +30,10 @@
     <div class="chat-box">
       <div class="chat-header">
         <h2>Chat WebSocket</h2>
-        <span id="current-user" class="user-badge">Sin nombre</span>
+        <div class="header-right">
+          <span id="current-user" class="user-badge">Sin nombre</span>
+          <a href="/pantalla" class="screen-link">Pantalla</a>
+        </div>
       </div>
 
       <form id="product-form" class="chat-form">
@@ -75,6 +78,36 @@
     const productIdInput = document.getElementById("product-id-input");
     const votedIds = new Set();
 
+    // Identificador único de esta pestaña para poder reconectar con el mismo nombre al volver de /pantalla
+    let clientId = sessionStorage.getItem("tp4_client_id");
+    if (!clientId) {
+      clientId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      sessionStorage.setItem("tp4_client_id", clientId);
+    }
+
+    // Cierra limpiamente el WebSocket al salir hacia /pantalla
+    window.addEventListener("pagehide", () => {
+      ws.close();
+    });
+
+    // Si vuelve con el botón "Atrás" del navegador desde caché, recarga para reconectar el WebSocket
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) location.reload();
+    });
+
+    // Si ya tenía nombre guardado en esta pestaña, oculta el modal y se vuelve a unir solo al conectar
+    const savedName = sessionStorage.getItem("tp4_name");
+    if (savedName) {
+      nameModal.classList.add("hidden");
+    }
+
+    ws.addEventListener("open", () => {
+      const stored = sessionStorage.getItem("tp4_name");
+      if (stored) {
+        ws.send(JSON.stringify({ type: "join", name: stored, clientId }));
+      }
+    });
+
     // Evita que tocar el botón "Enviar" le saque el foco al input y cierre el teclado en el celular
     sendBtn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
@@ -88,7 +121,7 @@
 
       joinError.textContent = "";
       // Envía el mensaje "join" al servidor y espera su confirmación
-      ws.send(JSON.stringify({ type: "join", name }));
+      ws.send(JSON.stringify({ type: "join", name, clientId }));
     });
 
     // 3. Cuando el usuario envía un mensaje de chat
@@ -132,13 +165,17 @@
       
 
       if (msg.type === "joined") {
+        sessionStorage.setItem("tp4_name", msg.name);
+        currentUser.dataset.joined = "1";
         currentUser.textContent = `Conectado como: ${msg.name}`;
         nameModal.classList.add("hidden");
         textInput.focus();
         return;
       }
 
-      if (msg.type === "error" && !nameModal.classList.contains("hidden")) {
+      if (msg.type === "error" && (!nameModal.classList.contains("hidden") || !currentUser.dataset.joined)) {
+        sessionStorage.removeItem("tp4_name");
+        nameModal.classList.remove("hidden");
         joinError.textContent = msg.message;
         nameInput.focus();
         return;

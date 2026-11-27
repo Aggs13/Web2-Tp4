@@ -1,0 +1,126 @@
+* { box-sizing: border-box; font-family: system-ui, sans-serif; }
+body {
+  margin: 0;
+  background: #0f1115;
+  color: #f3f4f6;
+  min-height: 100vh;
+  padding: 32px 24px;
+}
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #272a34;
+  margin-bottom: 28px;
+}
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.back-btn {
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+.back-btn:hover { background: #1d4ed8; }
+.status-badge {
+  background: #1c2432;
+  border: 1px solid #2f3e56;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4ade80;
+}
+#ranking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #181b22;
+  border: 1px solid #272a34;
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+.rank-pos {
+  font-size: 1.5rem;
+  font-weight: 800;
+  width: 42px;
+  text-align: center;
+  color: #9ca3af;
+}
+.rank-item:first-child {
+  border-color: #eab308;
+  background: #1f1d14;
+}
+.rank-item:first-child .rank-pos {
+  color: #facc15;
+}
+.rank-item img {
+  width: 68px;
+  height: 68px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #0f1115;
+  flex-shrink: 0;
+}
+.rank-info {
+  flex: 1;
+  min-width: 0;
+}
+.rank-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.rank-meta {
+  font-size: 0.95rem;
+  color: #9ca3af;
+}
+.rank-votes {
+  background: #2563eb;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.empty-msg {
+  text-align: center;
+  color: #6b7280;
+  padding: 48px 16px;
+  font-size: 1.1rem;
+}

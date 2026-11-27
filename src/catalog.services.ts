@@ -14,7 +14,7 @@ export async function GetProduct(id:number) {
     const res = await fetch(url,{signal: AbortSignal.timeout(config.catalogTimeoutMs)})
 
     if(res.status == 404) return {id,message: "Producto inexistente"}
-    if(!res.ok) return {message: `Error HTTP ${res.status}`}
+    if(!res.ok) return {id,message: `Error HTTP ${res.status}`}
 
     const data = await res.json()
     return{
@@ -28,7 +28,7 @@ export async function GetProduct(id:number) {
 
   } catch (error) {
     const isTimeout = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    return{message: isTimeout ? "El catálogo no respondió a tiempo" : "Error al consultar el catálogo",}
+    return{id,message: isTimeout ? "El catálogo no respondió a tiempo" : "Error al consultar el catálogo",}
   }
 }
 

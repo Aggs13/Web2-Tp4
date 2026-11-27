@@ -30,6 +30,11 @@ export async function ProponerProducto(ids:number[],nombreUsuario:string) {
       continue;
     } 
 
+    if (ExistProduct(p.id)) {
+      failed.push({ id: p.id, message: "El producto ya esta en la lista" });
+      continue; 
+    }
+
     const producto : Product = {
       id: p.id,
       title: p.title,

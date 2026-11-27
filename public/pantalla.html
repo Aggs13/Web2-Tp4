@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TP4 - Pantalla de Ranking en Vivo</title>
+  <link rel="stylesheet" href="/pantalla.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <a href="/" class="back-btn">← Volver</a>
+        <h1>Ranking del Regalo Grupal</h1>
+      </div>
+      <div class="status-badge">
+        <span class="dot"></span>
+        <span>Participantes conectados: <strong id="connected-count">0</strong></span>
+      </div>
+    </header>
+
+    <ul id="ranking-list">
+      <li class="empty-msg">Todavía no hay productos propuestos.</li>
+    </ul>
+  </div>
+
+  <script>
+    const connectedCountEl = document.getElementById("connected-count");
+    const rankingListEl = document.getElementById("ranking-list");
+
+    // Recibe las novedades del servidor por Server-Sent Events (solo lectura)
+    const source = new EventSource("/events");
+
+    source.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data);
+      connectedCountEl.textContent = data.connectedCount;
+      rankingListEl.innerHTML = "";
+
+      if (!data.ranking || data.ranking.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "empty-msg";
+        empty.textContent = "Todavía no hay productos propuestos.";
+        rankingListEl.appendChild(empty);
+        return;
+      }
+
+      data.ranking.forEach((p, index) => {
+        const li = document.createElement("li");
+        li.className = "rank-item";
+
+        const pos = document.createElement("div");
+        pos.className = "rank-pos";
+        pos.textContent = `#${index + 1}`;
+
+        const img = document.createElement("img");
+        img.src = p.thumbnail;
+        img.alt = p.title;
+
+        const info = document.createElement("div");
+        info.className = "rank-info";
+
+        const title = document.createElement("div");
+        title.className = "rank-title";
+        title.textContent = p.title;
+
+        const meta = document.createElement("div");
+        meta.className = "rank-meta";
+        meta.textContent = `$${p.price} · Propuesto por ${p.proposedBy}`;
+
+        const votes = document.createElement("div");
+        votes.className = "rank-votes";
+        votes.textContent = `★ ${p.votes}`;
+
+        info.appendChild(title);
+        info.appendChild(meta);
+        li.appendChild(pos);
+        li.appendChild(img);
+        li.appendChild(info);
+        li.appendChild(votes);
+        rankingListEl.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
